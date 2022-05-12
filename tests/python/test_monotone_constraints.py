@@ -103,6 +103,11 @@ class TestMonotoneConstraints:
 
         assert is_correctly_constrained(constrained_hist_method)
 
+    def test_monotone_constraints_tuple(self) -> None:
+        params_for_constrained = {"monotone_constraints": (1, -1)}
+        constrained = xgb.train(params_for_constrained, training_dset)
+        assert is_correctly_constrained(constrained)
+
     @pytest.mark.parametrize('format', [dict, list])
     def test_monotone_constraints_feature_names(self, format):
 

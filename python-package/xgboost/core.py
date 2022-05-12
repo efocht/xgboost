@@ -1354,8 +1354,12 @@ class Booster(object):
                 params += [('eval_metric', eval_metric)]
         return params
 
-    def _transform_monotone_constrains(self, value: Union[Dict[str, int], str]) -> str:
+    def _transform_monotone_constrains(
+        self, value: Union[Dict[str, int], str, Tuple[int, ...]]
+    ) -> Union[Tuple[int, ...], str]:
         if isinstance(value, str):
+            return value
+        if isinstance(value, tuple):
             return value
 
         constrained_features = set(value.keys())
