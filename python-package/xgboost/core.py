@@ -279,6 +279,24 @@ def _check_call(ret: int) -> None:
         raise XGBoostError(py_str(_LIB.XGBGetLastError()))
 
 
+def _check_call_with_args(ret: int, *args) -> None:
+    """Check the return value of C API call
+
+    This function will raise exception when error occurs.
+    Wrap every API call with this function
+
+    Parameters
+    ----------
+    ret : int
+        return value from API calls
+    *args:
+        additional arguments for debugging
+    """
+    if ret != 0:
+        args_arr = [" %r" % arg for arg in args]
+        raise XGBoostError(py_str(_LIB.XGBGetLastError()) + ", ".join(args_arr))
+
+
 def _has_categorical(booster: "Booster", data: DataType) -> bool:
     """Check whether the booster and input data for prediction contain categorical data.
 

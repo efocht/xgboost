@@ -20,6 +20,8 @@
 #include <cstring>
 #include <map>
 
+using namespace rabit::utils;
+
 namespace rabit {
 namespace engine {
 // constructor
@@ -459,8 +461,10 @@ AllreduceBase::TryAllreduce(void *sendrecvbuf_,
                             size_t count,
                             ReduceFunction reducer) {
   if (count > reduce_ring_mincount) {
+    Printf("TryAllreduceRing byte_size=%ld count=%ld\n", type_nbytes, count);
     return this->TryAllreduceRing(sendrecvbuf_, type_nbytes, count, reducer);
   } else {
+    Printf("TryAllreduceTree byte_size=%ld count=%ld\n", type_nbytes, count);
     return this->TryAllreduceTree(sendrecvbuf_, type_nbytes, count, reducer);
   }
 }
@@ -552,6 +556,7 @@ AllreduceBase::TryAllreduceTree(void *sendrecvbuf_,
                 && links[i].size_read - size_up_reduce < eachreduce) {
           ReturnType ret = links[i].ReadToRingBuffer(size_up_out, total_size);
           if (ret != kSuccess) {
+            Printf("TryAllreduceTree ERROR read data from children\n");
             return ReportError(&links[i], ret);
           }
         }
@@ -609,6 +614,7 @@ AllreduceBase::TryAllreduceTree(void *sendrecvbuf_,
         } else {
           ReturnType ret = Errno2Return();
           if (ret != kSuccess) {
+            Printf("TryAllreduceTree ERROR pass message up to parent\n");
             return ReportError(&links[parent_index], ret);
           }
         }
@@ -625,6 +631,7 @@ AllreduceBase::TryAllreduceTree(void *sendrecvbuf_,
 
           if (len == 0) {
             links[parent_index].sock.Close();
+            Printf("TryAllreduceTree ERROR read zero data from parent\n");
             return ReportError(&links[parent_index], kRecvZeroLen);
           }
           if (len != -1) {
@@ -641,6 +648,7 @@ AllreduceBase::TryAllreduceTree(void *sendrecvbuf_,
           } else {
             ReturnType ret = Errno2Return();
             if (ret != kSuccess) {
+              Printf("TryAllreduceTree ERROR read -1 data from parent\n");
               return ReportError(&links[parent_index], ret);
             }
           }
@@ -655,6 +663,7 @@ AllreduceBase::TryAllreduceTree(void *sendrecvbuf_,
       if (i != parent_index && links[i].size_write < size_down_in) {
         ReturnType ret = links[i].WriteFromArray(sendrecvbuf, size_down_in);
         if (ret != kSuccess) {
+          Printf("TryAllreduceTree ERROR pass data down to children\n");
           return ReportError(&links[i], ret);
         }
       }
@@ -811,6 +820,7 @@ AllreduceBase::TryAllgatherRing(void *sendrecvbuf_, size_t total_size,
       } else {
         ReturnType ret = Errno2Return();
         if (ret != kSuccess) {
+          Printf("TryAllgatherRing ERROR recv len = -1\n");
           auto err = ReportError(&next, ret);
           return err;
         }
@@ -828,6 +838,7 @@ AllreduceBase::TryAllgatherRing(void *sendrecvbuf_, size_t total_size,
       } else {
         ReturnType ret = Errno2Return();
         if (ret != kSuccess) {
+          Printf("TryAllgatherRing ERROR send len = -1\n");
           auto err = ReportError(&prev, ret);
           return err;
         }
@@ -902,6 +913,7 @@ AllreduceBase::TryReduceScatterRing(void *sendrecvbuf_,
     if (read_ptr != stop_read && watcher.CheckRead(next.sock)) {
       ReturnType ret = next.ReadToRingBuffer(reduce_ptr, stop_read);
       if (ret != kSuccess) {
+        Printf("TryReduceScatterRing ERROR next.ReadToRingBuffer\n");
         return ReportError(&next, ret);
       }
       // sync the rate
@@ -932,6 +944,7 @@ AllreduceBase::TryReduceScatterRing(void *sendrecvbuf_,
       if (len != -1) {
         write_ptr += static_cast<size_t>(len);
       } else {
+        Printf("TryReduceScatterRing ERROR end len = -1\n");
         ReturnType ret = Errno2Return();
         if (ret != kSuccess) return ReportError(&prev, ret);
       }

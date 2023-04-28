@@ -9,7 +9,7 @@ from typing import Any, List, Dict
 import numpy as np
 
 from ._typing import _T
-from .core import _LIB, _check_call, c_str, py_str, from_pystr_to_cstr
+from .core import _LIB, _check_call, _check_call_with_args, c_str, py_str, from_pystr_to_cstr
 
 LOGGER = logging.getLogger("[xgboost.collective]")
 
@@ -221,9 +221,12 @@ def allreduce(  # pylint:disable=invalid-name
         buf = buf.copy()
     if buf.dtype not in DTYPE_ENUM__:
         raise Exception(f"data type {buf.dtype} not supported")
-    _check_call(_LIB.XGCommunicatorAllreduce(buf.ctypes.data_as(ctypes.c_void_p),
-                                             buf.size, DTYPE_ENUM__[buf.dtype],
-                                             int(op), None, None))
+    _check_call_with_args(_LIB.XGCommunicatorAllreduce(buf.ctypes.data_as(ctypes.c_void_p),
+                                                       buf.size, DTYPE_ENUM__[buf.dtype],
+                                                       int(op), None, None),
+                          buf.ctypes.data_as(ctypes.c_void_p),
+                          buf.size, DTYPE_ENUM__[buf.dtype],
+                          int(op))
     return buf
 
 
